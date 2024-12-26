@@ -36,8 +36,8 @@ jobs:
 
       - name: Package before release
         run: |
-          tar -czvf runproclike-amd64-${{ steps.vars.outputs.crate_version }}.tar.gz -C linux_amd64 runproclike-linux-amd64
-          tar -czvf runproclike-arm64-${{ steps.vars.outputs.crate_version }}.tar.gz -C linux_arm64 runproclike-linux-arm64
+          tar -czvf runproclike-linux-amd64-${{ steps.vars.outputs.crate_version }}.tar.gz -C linux_amd64 runproclike-linux-amd64
+          tar -czvf runproclike-linux-arm64-${{ steps.vars.outputs.crate_version }}.tar.gz -C linux_arm64 runproclike-linux-arm64
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -45,5 +45,5 @@ jobs:
           generate_release_notes: true
           token: ${{ secrets.CUSTOM_PAT }}
           files: |
-            runproclike-amd64-${{ steps.vars.outputs.crate_version }}.tar.gz
-            runproclike-arm64-${{ steps.vars.outputs.crate_version }}.tar.gz
+            runproclike-linux-amd64-${{ steps.vars.outputs.crate_version }}.tar.gz
+            runproclike-linux-arm64-${{ steps.vars.outputs.crate_version }}.tar.gz
