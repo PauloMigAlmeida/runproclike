@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set vars
+        id: vars
+        run: echo "crate_version=$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[0].version')" >> $GITHUB_OUTPUT
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push amd64 & arm64
+        uses: docker/build-push-action@v6.10.0
+        with:
+          context: .
+          file: .github/docker/Dockerfile
+          push: false
+          platforms: linux/amd64, linux/arm64
+          outputs: .
+
+      - name: Package before release
+        run: |
+          tar -czvf runproclike-amd64-${{ steps.vars.outputs.crate_version }}.tar.gz -C linux_amd64 runproclike-linux-amd64
+          tar -czvf runproclike-arm64-${{ steps.vars.outputs.crate_version }}.tar.gz -C linux_arm64 runproclike-linux-arm64
+
+      - name: Release
+        uses: softprops/action-gh-release@v2.2.0
+        with:
+          files: |
+            runproclike-amd64-${{ steps.vars.outputs.crate_version }}.tar.gz
+            runproclike-arm64-${{ steps.vars.outputs.crate_version }}.tar.gz
