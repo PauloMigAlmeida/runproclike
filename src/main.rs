@@ -1,5 +1,5 @@
 mod cli;
-mod proc;
+mod executable;
 
 fn main() {
     // Launch fuse client

@@ -1,8 +1,7 @@
-use clap::{crate_name, crate_version, Parser, ArgAction};
+use crate::executable::Executable;
 use anyhow::anyhow;
-use nix::unistd::Uid;
+use clap::{crate_name, crate_version, ArgAction, Parser};
 use procfs::process::Process;
-use crate::proc::Proc;
 
 #[derive(Parser)]
 #[command(version = crate_version!(), bin_name = crate_name!())]
@@ -17,20 +16,34 @@ pub struct CliArgs {
     default_value = "false"
     )]
     pub command_only: bool,
+
+    #[arg(
+    long,
+    help = "Omit comments from the output.",
+    action = ArgAction::SetTrue,
+    default_value = "false"
+    )]
+    pub omit_comments: bool,
 }
 
 impl CliArgs {
     fn validate(&self) -> anyhow::Result<()> {
-        /*
-            /proc/<pid>/cmdline (and other files) are only visible to its own process
-            the only way of reading those files is to have root privileges
-         */
-        if !Uid::effective().is_root() {
-            return Err(anyhow!("You must run this executable with root permissions"));
-        }
-
         // check if pid exists
-        Process::new(self.pid).or(Err(anyhow!("Invalid PID {}", self.pid)))?;
+        let proc = Process::new(self.pid).or(Err(anyhow!("Invalid PID {}", self.pid)))?;
+        proc.status().or(Err(anyhow!(
+            "read: /proc/{}/status: Permission denied",
+            self.pid
+        )))?;
+
+        proc.cmdline().or(Err(anyhow!(
+            "read: /proc/{}/cmdline: Permission denied",
+            self.pid
+        )))?;
+
+        proc.environ().or(Err(anyhow!(
+            "read: /proc/{}/environ: Permission denied",
+            self.pid
+        )))?;
 
         Ok(())
     }
@@ -41,7 +54,46 @@ pub fn main() {
     args.validate().expect("Failed to validate arguments");
 
     // extract info from process
-    let executable = Proc::new(args);
+    let executable = Executable::new(args);
     executable.extract_info();
+}
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_validate_different_pid_fail() {
+        let args = CliArgs {
+            pid: 1,
+            command_only: false,
+            omit_comments: false,
+        };
+        let result = args.validate().unwrap_err();
+        assert_eq!(
+            result.to_string(),
+            "read: /proc/1/environ: Permission denied"
+        );
+    }
+
+    #[test]
+    fn test_validate_invalid_pid_fail() {
+        let args = CliArgs {
+            pid: -1,
+            command_only: false,
+            omit_comments: false,
+        };
+        let result = args.validate().unwrap_err();
+        assert_eq!(result.to_string(), "Invalid PID -1");
+    }
+
+    #[test]
+    fn test_validate_valid_pid_success() {
+        let args = CliArgs {
+            pid: Process::myself().unwrap().pid() as i32,
+            command_only: false,
+            omit_comments: false,
+        };
+        let result = args.validate();
+        assert!(result.is_ok());
+    }
 }
