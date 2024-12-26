@@ -1,4 +1,5 @@
 # runproclike
+[![Build](https://github.com/PauloMigAlmeida/runproclike/actions/workflows/rust.yml/badge.svg)](https://github.com/PauloMigAlmeida/runproclike/actions/workflows/rust.yml)
 
 `runproclike` is a lightweight command-line utility that analyzes a running process by its PID and prints the command and its environment in a reproducible form. It's especially useful for debugging, replicating process states, or migrating workloads.
 
