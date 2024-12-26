@@ -74,7 +74,7 @@ impl Executable {
         let cmdline = proc_file.cmdline().unwrap();
 
         if !self.cli_args.omit_comments {
-            vec.push("# change cmdline to match the target process\n".to_string());
+            vec.push("# cmdline to match the target process\n".to_string());
         }
 
         for (i, arg) in cmdline.iter().enumerate() {
@@ -189,7 +189,7 @@ mod tests {
         let mut i = 0;
 
         if !executable.cli_args.omit_comments {
-            assert_eq!(result[i], "# change cmdline to match the target process\n");
+            assert_eq!(result[i], "# cmdline to match the target process\n");
             i += 1;
         }
 

@@ -60,7 +60,7 @@ sudo -i -u \#1000 <<EOF
   export XDG_MENU_PREFIX='gnome-'
   export LANG='en_NZ.UTF-8'
   
-  # change cmdline to match the target process
+  # cmdline to match the target process
   /bin/bash \
      --rcfile \
     /home/paulo/IDE/RustRover-2024.3.2/plugins/terminal/shell-integrations/bash/bash-integration.bash \
