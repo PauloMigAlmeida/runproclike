@@ -65,7 +65,7 @@ sudo -i -u \#1000 <<EOF
      --rcfile \
     /home/paulo/IDE/RustRover-2024.3.2/plugins/terminal/shell-integrations/bash/bash-integration.bash \
     -i
-  EOF
+EOF
 ```
 
 ## How it Works
