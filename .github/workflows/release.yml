@@ -40,7 +40,7 @@ jobs:
           tar -czvf runproclike-arm64-${{ steps.vars.outputs.crate_version }}.tar.gz -C linux_arm64 runproclike-linux-arm64
 
       - name: Release
-        uses: softprops/action-gh-release@v2.2.0
+        uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           token: ${{ secrets.CUSTOM_PAT }}
