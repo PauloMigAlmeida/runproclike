@@ -1,5 +1,7 @@
 # runproclike
 [![Build](https://github.com/PauloMigAlmeida/runproclike/actions/workflows/rust.yml/badge.svg)](https://github.com/PauloMigAlmeida/runproclike/actions/workflows/rust.yml)
+[![Release](https://github.com/PauloMigAlmeida/runproclike/actions/workflows/release.yml/badge.svg)](https://github.com/PauloMigAlmeida/runproclike/actions/workflows/release.yml)
+[![Crate](https://img.shields.io/crates/v/runproclike.svg)](https://crates.io/crates/runproclike)
 
 `runproclike` is a lightweight command-line utility that analyzes a running process by its PID and prints the command and its environment in a reproducible form. It's especially useful for debugging, replicating process states, or migrating workloads.
 
@@ -10,9 +12,24 @@
 
 ## Installation
 
+### Using Cargo
+
 ```bash
 export PATH=~/.cargo/bin/:$PATH
 cargo install runproclike
+```
+
+### Using Docker
+Don't want to build and install anything? All good, you can leverage the docker image
+built precisely for that!
+
+```bash
+docker run \
+  --rm \
+  --privileged \
+  --pid=host \
+  ghcr.io/paulomigalmeida/runproclike:latest \
+  --pid <pid>
 ```
 
 ### Building from source
