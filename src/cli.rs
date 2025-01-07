@@ -1,7 +1,5 @@
-use crate::executable::Executable;
-use anyhow::anyhow;
+use crate::executable::{Executable, OSSpecificExecutable};
 use clap::{crate_name, crate_version, ArgAction, Parser};
-use procfs::process::Process;
 
 #[derive(Parser)]
 #[command(version = crate_version!(), bin_name = crate_name!())]
@@ -28,24 +26,7 @@ pub struct CliArgs {
 
 impl CliArgs {
     fn validate(&self) -> anyhow::Result<()> {
-        // check if pid exists
-        let proc = Process::new(self.pid).or(Err(anyhow!("Invalid PID {}", self.pid)))?;
-        proc.status().or(Err(anyhow!(
-            "read: /proc/{}/status: Permission denied",
-            self.pid
-        )))?;
-
-        proc.cmdline().or(Err(anyhow!(
-            "read: /proc/{}/cmdline: Permission denied",
-            self.pid
-        )))?;
-
-        proc.environ().or(Err(anyhow!(
-            "read: /proc/{}/environ: Permission denied",
-            self.pid
-        )))?;
-
-        Ok(())
+        Executable::validate(self.pid)
     }
 }
 pub fn main() {
@@ -61,6 +42,8 @@ pub fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::process;
+
     #[test]
     fn test_validate_different_pid_fail() {
         let args = CliArgs {
@@ -69,9 +52,17 @@ mod tests {
             omit_comments: false,
         };
         let result = args.validate().unwrap_err();
+
+        #[cfg(target_os = "linux")]
         assert_eq!(
             result.to_string(),
             "read: /proc/1/environ: Permission denied"
+        );
+
+        #[cfg(target_os = "macos")]
+        assert_eq!(
+            result.to_string(),
+            "got permission denied while checking if PID 1 exits"
         );
     }
 
@@ -89,7 +80,7 @@ mod tests {
     #[test]
     fn test_validate_valid_pid_success() {
         let args = CliArgs {
-            pid: Process::myself().unwrap().pid() as i32,
+            pid: process::id() as i32,
             command_only: false,
             omit_comments: false,
         };

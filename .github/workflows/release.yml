@@ -9,6 +9,7 @@ env:
   CARGO_TERM_COLOR: always
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  DOCKER_BUILD_RECORD_UPLOAD: false
 
 jobs:
   docker_push:
@@ -69,7 +70,7 @@ jobs:
       - name: Cargo Publish
         run: cargo publish
 
-  create_gh_release:
+  build_linux_binaries:
     needs: [cargo_publish, docker_push]
     runs-on: ubuntu-latest
     steps:
@@ -100,12 +101,57 @@ jobs:
           tar -czvf runproclike-linux-amd64-${{ steps.vars.outputs.crate_version }}.tar.gz -C linux_amd64 runproclike-linux-amd64
           tar -czvf runproclike-linux-arm64-${{ steps.vars.outputs.crate_version }}.tar.gz -C linux_arm64 runproclike-linux-arm64
 
+      - name: upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifacts
+          path: runproclike-linux-*.tar.gz
+          compression-level: 0
+          if-no-files-found: error
+          overwrite: true
+
+  build_macos_binaries:
+    needs: [ cargo_publish, docker_push ]
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set vars
+        id: vars
+        run: echo "crate_version=$(cargo metadata --format-version=1 --no-deps | jq -r '.packages[0].version')" >> $GITHUB_OUTPUT
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Package before release
+        run: |
+          mv target/release/runproclike target/release/runproclike-macos-arm64
+          tar -czvf runproclike-macos-arm64-${{ steps.vars.outputs.crate_version }}.tar.gz -C target/release runproclike-macos-arm64
+
+      - name: upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-artifacts
+          path: runproclike-macos-arm64-${{ steps.vars.outputs.crate_version }}.tar.gz
+          compression-level: 0
+          if-no-files-found: error
+          overwrite: true
+
+  create_gh_release:
+    needs: [ build_linux_binaries, build_macos_binaries ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           token: ${{ secrets.CUSTOM_PAT }}
           files: |
-            runproclike-linux-amd64-${{ steps.vars.outputs.crate_version }}.tar.gz
-            runproclike-linux-arm64-${{ steps.vars.outputs.crate_version }}.tar.gz
+            linux-artifacts/runproclike-linux-amd64-${{ steps.vars.outputs.crate_version }}.tar.gz
+            linux-artifacts/runproclike-linux-arm64-${{ steps.vars.outputs.crate_version }}.tar.gz
+            macos-artifacts/runproclike-macos-arm64-${{ steps.vars.outputs.crate_version }}.tar.gz
 

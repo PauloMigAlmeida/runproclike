@@ -1,6 +1,6 @@
 [package]
 name = "runproclike"
-version = "0.1.4"
+version = "0.2.0"
 edition = "2021"
 license-file = "LICENSE"
 homepage = "https://github.com/PauloMigAlmeida/runproclike"
@@ -8,6 +8,13 @@ repository = "https://github.com/PauloMigAlmeida/runproclike.git"
 description = "runproclike is a CLI utility that analyzes a running process by its PID and prints the command and its environment in a reproducible form."
 
 [dependencies]
-procfs = "0.17.0"
 clap = { version = "4.5.23", features = ["cargo", "derive"] }
 anyhow = "1.0.95"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+procfs = "0.17.0"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+libc = "0.2.169"
+darwin-libproc = "0.2.0"
+darwin-libproc-sys = "0.2.0"
