@@ -10,6 +10,29 @@
 - Generates a detailed output of the process's environment, command line, and execution context.
 - Inspired by the [runlike](https://github.com/lavie/runlike) tool, which focuses on reconstructing Docker commands. `runproclike` extends this concept to Linux processes.
 
+### Example
+
+```bash
+runproclike --pid 19352
+
+sudo -i -u \#1000 <<EOF
+  # change cwd user to match the target process
+  cd /home/paulo/workspace/runproclike
+  
+  # export env variables to match the target process
+  export WAYLAND_DISPLAY='wayland-0'
+  export USER='paulo'
+  export XDG_MENU_PREFIX='gnome-'
+  export LANG='en_NZ.UTF-8'
+  
+  # cmdline to match the target process
+  /bin/bash \
+     --rcfile \
+    /home/paulo/IDE/RustRover-2024.3.2/plugins/terminal/shell-integrations/bash/bash-integration.bash \
+    -i
+EOF
+```
+
 ## Installation
 
 ### Using Cargo
@@ -58,31 +81,6 @@ Options:
       --omit-comments  Omit comments from the output.
   -h, --help           Print help
   -V, --version        Print version
-```
-
-### Examples
-
-Reproduce a Process:
-
-```bash
-runproclike --pid 19352
-
-sudo -i -u \#1000 <<EOF
-  # change cwd user to match the target process
-  cd /home/paulo/workspace/runproclike
-  
-  # export env variables to match the target process
-  export WAYLAND_DISPLAY='wayland-0'
-  export USER='paulo'
-  export XDG_MENU_PREFIX='gnome-'
-  export LANG='en_NZ.UTF-8'
-  
-  # cmdline to match the target process
-  /bin/bash \
-     --rcfile \
-    /home/paulo/IDE/RustRover-2024.3.2/plugins/terminal/shell-integrations/bash/bash-integration.bash \
-    -i
-EOF
 ```
 
 ## How it Works
